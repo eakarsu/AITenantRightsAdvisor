@@ -56,6 +56,12 @@ app.use('/api/gap-no-audit-logging', require('./routes/gapNoAuditLogging'));
 app.use('/api/gap-no-integrations-module', require('./routes/gapNoIntegrationsModule'));
 app.use('/api/gap-no-multi-language-support-routes', require('./routes/gapNoMultiLanguageSupportRoutes'));
 
+// === Custom Views (mounted before any catch-all/404) ===
+app.use('/api/custom-views', require('./routes/customViews'));
+
+// 404 catch-all for unknown API routes (must come AFTER all mounts)
+app.use('/api', (req, res) => res.status(404).json({ error: 'Not found' }));
+
 app.listen(PORT, () => console.log(`AI Tenant Rights server running on port ${PORT}`));
 }
 

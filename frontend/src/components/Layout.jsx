@@ -29,6 +29,7 @@ export default function Layout({ children }) {
           <Link to="/tenancies/new" style={styles.navLink}>Add Tenancy</Link>
           <Link to="/case-outcome" style={styles.navLink}>Case Outcome</Link>
           <Link to="/local-law-lookup" style={styles.navLink}>Local Law</Link>
+          <Link to="/custom-views" style={styles.navLink} data-testid="nav-tenant-views">Tenant Views</Link>
           <span style={{ color: '#9ae6b4', fontSize: 13 }}>{user.name}</span>
           <button onClick={logout} style={styles.btn}>Logout</button>
         </div>

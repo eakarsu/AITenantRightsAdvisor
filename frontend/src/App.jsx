@@ -35,11 +35,13 @@ import GapNoNotificationsOrRemindersForDeadlinesE from './pages/GapNoNotificatio
 import GapNoAuditLogging from './pages/GapNoAuditLogging'
 import GapNoIntegrationsModule from './pages/GapNoIntegrationsModule'
 import GapNoMultiLanguageSupportRoutes from './pages/GapNoMultiLanguageSupportRoutes'
+import CustomViewsPage from './pages/CustomViewsPage.jsx'
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem('token');
   return token ? children : <Navigate to="/login" />;
 }
+const ProtectedRoute = PrivateRoute;
 
 export default function App() {
   return (
@@ -80,6 +82,7 @@ export default function App() {
       <Route path="/gap-no-audit-logging" element={<ProtectedRoute><GapNoAuditLogging /></ProtectedRoute>} />
       <Route path="/gap-no-integrations-module" element={<ProtectedRoute><GapNoIntegrationsModule /></ProtectedRoute>} />
       <Route path="/gap-no-multi-language-support-routes" element={<ProtectedRoute><GapNoMultiLanguageSupportRoutes /></ProtectedRoute>} />
+      <Route path="/custom-views" element={<PrivateRoute><CustomViewsPage /></PrivateRoute>} />
       <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>
