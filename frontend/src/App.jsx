@@ -17,6 +17,11 @@ import NegotiationSimulator from './pages/NegotiationSimulator.jsx';
 import DocumentAssembly from './pages/DocumentAssembly.jsx';
 import LegalResourceDirectory from './pages/LegalResourceDirectory.jsx';
 import LegalExpertChat from './pages/LegalExpertChat.jsx';
+import CodexCustomVizFeature from './pages/CodexCustomVizFeature';
+import CodexOperationsFeature from './pages/CodexOperationsFeature';
+
+import TimelineView from './pages/TimelineView';
+
 // === Batch 08 Gaps & Frontend Mounts ===
 import CfLocalLawAdaptationCustomizingAdviceByState from './pages/CfLocalLawAdaptationCustomizingAdviceByState'
 import CfCaseOutcomePredictionEstimatingEvictionDefenseSuccess from './pages/CfCaseOutcomePredictionEstimatingEvictionDefenseSuccess'
@@ -47,6 +52,10 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/insights/timeline" element={<ProtectedRoute><TimelineView /></ProtectedRoute>} />
+        <Route path="/codex/custom-viz" element={<ProtectedRoute><CodexCustomVizFeature /></ProtectedRoute>} />
+        <Route path="/codex/operations" element={<ProtectedRoute><CodexOperationsFeature /></ProtectedRoute>} />
+
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
