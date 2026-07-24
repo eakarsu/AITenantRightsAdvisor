@@ -9,7 +9,8 @@ const router = express.Router();
 router.use(authMiddleware);
 
 async function callOpenRouter(messages, maxTokens = 2000) {
-  const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+  const baseUrl = process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1';
+  const res = await fetch(`${baseUrl.replace(/\/$/, '')}/chat/completions`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
@@ -25,7 +26,9 @@ async function callOpenRouter(messages, maxTokens = 2000) {
     const err = await res.text();
     throw new Error(`OpenRouter error: ${err}`);
   }
-  return res.json();
+  const data = await res.json();
+  if (!data.choices?.[0]?.message?.content) throw new Error('OpenRouter returned an empty response');
+  return data;
 }
 
 async function persistResult(userId, endpoint, inputData, result) {
@@ -34,6 +37,18 @@ async function persistResult(userId, endpoint, inputData, result) {
     [userId, endpoint, JSON.stringify(inputData), JSON.stringify(result)]
   );
 }
+
+router.get('/history', async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT id,endpoint,input_data,result,created_at FROM ai_results WHERE user_id=$1 ORDER BY created_at DESC LIMIT 50',
+      [req.user.id]
+    );
+    res.json({ history: result.rows });
+  } catch (err) {
+    res.status(503).json({ error: 'AI history unavailable' });
+  }
+});
 
 async function verifyTenancy(tenancyId, userId) {
   const result = await pool.query('SELECT * FROM tenancies WHERE id=$1 AND user_id=$2', [tenancyId, userId]);

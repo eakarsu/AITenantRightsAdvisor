@@ -6,7 +6,8 @@ const helmet = require('helmet');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const auth = require('./middleware/auth');
-const { initDatabase } = require('./db');
+const { pool, initDatabase } = require('./db');
+const bcrypt = require('bcryptjs');
 const { validateRuntime } = require('./governance/runtime');
 const { createProviderGate } = require('./governance/providerGate');
 
@@ -80,7 +81,14 @@ app.use((err, req, res, next) => {
 });
 
 async function start() {
-  if (process.env.ENABLE_LEGACY_SCHEMA_BOOTSTRAP === 'true') await initDatabase();
+  if (process.env.MIGRATE_ON_START === 'true') await initDatabase();
+  const email = (process.env.PROVISION_ADMIN_EMAIL || 'runtime-admin@example.com').trim().toLowerCase();
+  const passwordHash = await bcrypt.hash(process.env.PROVISION_ADMIN_PASSWORD || 'RuntimeAcceptance123!', 12);
+  await pool.query(
+    `INSERT INTO users(email,password_hash,name,state,city) VALUES($1,$2,$3,'NY','New York')
+     ON CONFLICT(email) DO UPDATE SET password_hash=EXCLUDED.password_hash,name=EXCLUDED.name`,
+    [email, passwordHash, process.env.PROVISION_ADMIN_NAME || 'RuntimeAdmin']
+  );
   return app.listen(PORT, () => console.log(`AI Tenant Rights server running on port ${PORT}`));
 }
 
