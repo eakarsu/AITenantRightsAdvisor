@@ -48,6 +48,15 @@ export default function Login() {
           <input style={s.input} type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})} required />
           <label style={s.label}>Password</label>
           <input style={s.input} type="password" value={form.password} onChange={e => setForm({...form, password: e.target.value})} required />
+          <button
+            type="button"
+            onClick={() => { setForm((current) => ({ ...current, email: import.meta.env.VITE_DEMO_EMAIL || '', password: import.meta.env.VITE_DEMO_PASSWORD || '' })); }}
+            disabled={!import.meta.env.VITE_DEMO_EMAIL || !import.meta.env.VITE_DEMO_PASSWORD}
+            aria-label="Auto Fill Demo Credentials"
+            style={{ width: '100%', marginBottom: '12px', padding: '10px 14px', borderRadius: '8px', border: '1px solid currentColor', background: 'transparent', cursor: 'pointer' }}
+          >
+            Auto Fill Demo Credentials
+          </button>
           <button style={s.btn} type="submit" disabled={loading}>{loading ? 'Signing in...' : 'Sign In'}</button>
         </form>
         <div style={s.link}>Don't have an account? <Link to="/register" style={s.a}>Register</Link></div>
