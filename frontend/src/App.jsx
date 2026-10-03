@@ -1,3 +1,5 @@
+import { useLocation } from 'react-router-dom';
+import AppSidebar from './components/AppSidebar';
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login.jsx';
@@ -48,10 +50,19 @@ function PrivateRoute({ children }) {
 }
 const ProtectedRoute = PrivateRoute;
 
+function SidebarFrame({ children }) {
+  const location = useLocation();
+  const show = Boolean(localStorage.getItem('token')) && !['/login', '/register'].includes(location.pathname);
+  return <div className={show ? 'codex-nav-shell' : undefined}>
+    {show && <AppSidebar />}
+    {children}
+  </div>;
+}
+
 export default function App() {
   return (
     <BrowserRouter>
-      <Routes>
+      <SidebarFrame><Routes>
         <Route path="/insights/timeline" element={<ProtectedRoute><TimelineView /></ProtectedRoute>} />
         <Route path="/codex/custom-viz" element={<ProtectedRoute><CodexCustomVizFeature /></ProtectedRoute>} />
         <Route path="/codex/operations" element={<ProtectedRoute><CodexOperationsFeature /></ProtectedRoute>} />
@@ -93,7 +104,7 @@ export default function App() {
       <Route path="/gap-no-multi-language-support-routes" element={<ProtectedRoute><GapNoMultiLanguageSupportRoutes /></ProtectedRoute>} />
       <Route path="/custom-views" element={<PrivateRoute><CustomViewsPage /></PrivateRoute>} />
       <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
+      </Routes></SidebarFrame>
     </BrowserRouter>
   );
 }
