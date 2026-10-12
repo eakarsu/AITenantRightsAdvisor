@@ -9,4 +9,10 @@ function createProviderGate(prefixes) {
     return next();
   };
 }
-module.exports={createProviderGate};
+function providerReadiness(env = process.env) {
+  if (env.ENABLE_LEGACY_PROVIDER_ROUTES !== 'true') return { available: false, reason: 'Legal provider routes are quarantined. Examples can be reviewed; provider execution is unavailable.' };
+  if (env.NODE_ENV === 'production') return { available: false, reason: 'Production legal provider execution requires contract, privacy and acceptance review.' };
+  if (!env.OPENROUTER_API_KEY) return { available: false, reason: 'The backend provider credential is not configured.' };
+  return { available: true, reason: 'Non-production evaluation is enabled. Review source documents and generated drafts before use.' };
+}
+module.exports={createProviderGate,providerReadiness};

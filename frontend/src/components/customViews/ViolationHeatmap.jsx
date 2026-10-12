@@ -18,8 +18,11 @@ export default function ViolationHeatmap() {
 
   useEffect(() => {
     api.get('/custom-views/violation-heatmap')
-      .then(r => setData(r.data))
-      .catch(e => setError(e.response?.data?.error || 'Failed to load'))
+      .then(r => {
+        if (!Array.isArray(r.data?.matrix) || !Array.isArray(r.data?.states)) throw new Error('The heatmap response did not contain rows and states.');
+        setData(r.data);
+      })
+      .catch(e => setError(e.response?.data?.error || e.message || 'Failed to load'))
       .finally(() => setLoading(false));
   }, []);
 

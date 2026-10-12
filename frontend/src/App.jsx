@@ -1,3 +1,4 @@
+import AIReportLibrary from "./components/AIReportLibrary";
 import { useLocation } from 'react-router-dom';
 import AppSidebar from './components/AppSidebar';
 import React from 'react';
@@ -61,7 +62,7 @@ function SidebarFrame({ children }) {
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <><AIReportLibrary floating /><BrowserRouter>
       <SidebarFrame><Routes>
         <Route path="/insights/timeline" element={<ProtectedRoute><TimelineView /></ProtectedRoute>} />
         <Route path="/codex/custom-viz" element={<ProtectedRoute><CodexCustomVizFeature /></ProtectedRoute>} />
@@ -105,6 +106,6 @@ export default function App() {
       <Route path="/custom-views" element={<PrivateRoute><CustomViewsPage /></PrivateRoute>} />
       <Route path="*" element={<Navigate to="/" />} />
       </Routes></SidebarFrame>
-    </BrowserRouter>
+    </BrowserRouter></>
   );
 }

@@ -1,3 +1,6 @@
+import NativeAIControls from '../components/NativeAIControls';
+import FormattedAIReport from '../components/FormattedAIReport';
+import { useNativeTenantAI, NativeTenantAIStatus } from '../components/NativeTenantAI';
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Layout from '../components/Layout.jsx';
@@ -31,26 +34,31 @@ const s = {
 
 export default function RentIncreaseCheck() {
   const { id } = useParams();
-  const [tenancy, setTenancy] = useState(null);
+  const source = useNativeTenantAI(id);
+  const { tenancy } = source;
   const [form, setForm] = useState({ current_rent: '', proposed_rent: '', address: '' });
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    api.get(`/tenancies/${id}`).then(r => {
-      setTenancy(r.data);
-      setForm(prev => ({
-        ...prev,
-        current_rent: r.data.monthly_rent || '',
-        address: r.data.property_address || '',
-      }));
-    });
-  }, [id]);
+    if (!tenancy) return;
+    setForm((current) => ({ ...current, current_rent: tenancy.monthly_rent ?? '', address: tenancy.property_address ?? '' }));
+  }, [tenancy]);
+
+  const presets = [0, 5, 10].map((percent) => ({
+    name: `${percent}% planning scenario`,
+    fill: () => {
+      if (!tenancy || form.current_rent === '' || !form.address.trim()) return { filled: 0, manual: ['an owned tenancy with its current rent and actual address'] };
+      setForm((current) => ({ ...current, proposed_rent: (Number(current.current_rent) * (1 + percent / 100)).toFixed(2) }));
+      return { filled: 3, manual: [] };
+    },
+  }));
 
   const f = (k) => ({ value: form[k], onChange: e => setForm({...form, [k]: e.target.value}) });
 
   async function check() {
+    if (!source.canRun || form.current_rent === '' || form.proposed_rent === '' || !form.address.trim()) { setError('Actual tenancy, rent, address and available provider are required.'); return; }
     setLoading(true);
     setError('');
     try {
@@ -78,21 +86,25 @@ export default function RentIncreaseCheck() {
         <p style={s.sub}>Check if a proposed rent increase complies with local rent control laws and tenant protections.</p>
         {error && <div style={s.err}>{error}</div>}
 
+        <NativeTenantAIStatus {...source} />
+        <NativeAIControls busy={loading} context="Rent planning" presets={presets}>
+        <p>Three examples fill the proposed rent from the current amount. Actual rent and address are preserved, including zero; no example replaces source facts.</p>
         <div style={s.row}>
           <div>
             <label style={s.label}>Current Monthly Rent ($)</label>
-            <input style={s.input} type="number" min="0" step="0.01" placeholder="1500" {...f('current_rent')} />
+            <input style={s.input} data-ai-field="current_rent" type="number" min="0" step="0.01" placeholder="Actual current rent" {...f('current_rent')} />
           </div>
           <div>
             <label style={s.label}>Proposed Monthly Rent ($)</label>
-            <input style={s.input} type="number" min="0" step="0.01" placeholder="1700" {...f('proposed_rent')} />
+            <input style={s.input} data-ai-field="proposed_rent" type="number" min="0" step="0.01" placeholder="Proposed rent" {...f('proposed_rent')} />
           </div>
         </div>
         <label style={s.label}>Property Address</label>
-        <input style={s.input} type="text" placeholder="Full address including city and state" {...f('address')} />
-        <button style={s.btn} onClick={check} disabled={loading}>
+        <input style={s.input} data-ai-field="address" type="text" placeholder="Full address including city and state" {...f('address')} />
+        <button style={s.btn} onClick={check} disabled={loading || !source.canRun || form.current_rent === '' || form.proposed_rent === '' || !form.address.trim()}>
           {loading ? 'Checking...' : 'Check Legality'}
         </button>
+        </NativeAIControls>
 
         {result && vs && (
           <div style={{ marginTop: 28 }}>
@@ -133,6 +145,7 @@ export default function RentIncreaseCheck() {
             )}
           </div>
         )}
+        {result && <FormattedAIReport response={result} title="Complete rent analysis" />}
       </div>
     </Layout>
   );

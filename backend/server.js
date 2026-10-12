@@ -7,9 +7,8 @@ const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const auth = require('./middleware/auth');
 const { pool, initDatabase } = require('./db');
-const bcrypt = require('bcryptjs');
 const { validateRuntime } = require('./governance/runtime');
-const { createProviderGate } = require('./governance/providerGate');
+const { createProviderGate, providerReadiness } = require('./governance/providerGate');
 
 validateRuntime();
 
@@ -40,7 +39,7 @@ app.use(rateLimit({
   legacyHeaders: false,
 }));
 
-app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
+app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString(), legalProvider: providerReadiness() }));
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/governance', require('./governance/router'));
 app.use('/api', auth);
@@ -74,6 +73,14 @@ if (process.env.ENABLE_LEGACY_PROVIDER_ROUTES === 'true') {
   for (const [routePath, modulePath] of legacyRoutes) app.use(routePath, require(modulePath));
 }
 
+
+// Advisory AI reports only; native execution and approval routes stay unchanged.
+const aiWorkspaceSupport = require("./aiWorkspaceAdapters.cjs");
+const aiWorkspaceDatabase = require("./db.js").pool;
+app.use('/api/report-workspace', require("./aiWorkspace.cjs").createAIWorkspaceRouter({
+  pool: aiWorkspaceDatabase, authenticateToken: require("./middleware/auth.js"),
+  aiRateLimiter: aiWorkspaceSupport.createWorkspaceLimiter(), features: require("./aiWorkspaceFeatures.json"),
+}));
 app.use('/api', (req, res) => res.status(404).json({ error: 'Not found' }));
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err.message);
@@ -82,13 +89,6 @@ app.use((err, req, res, next) => {
 
 async function start() {
   if (process.env.MIGRATE_ON_START === 'true') await initDatabase();
-  const email = (process.env.PROVISION_ADMIN_EMAIL || 'runtime-admin@example.com').trim().toLowerCase();
-  const passwordHash = await bcrypt.hash(process.env.PROVISION_ADMIN_PASSWORD || 'RuntimeAcceptance123!', 12);
-  await pool.query(
-    `INSERT INTO users(email,password_hash,name,state,city) VALUES($1,$2,$3,'NY','New York')
-     ON CONFLICT(email) DO UPDATE SET password_hash=EXCLUDED.password_hash,name=EXCLUDED.name`,
-    [email, passwordHash, process.env.PROVISION_ADMIN_NAME || 'RuntimeAdmin']
-  );
   return app.listen(PORT, () => console.log(`AI Tenant Rights server running on port ${PORT}`));
 }
 

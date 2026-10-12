@@ -18,10 +18,11 @@ export default function RegulationRulesEditor() {
     setLoading(true);
     try {
       const r = await api.get('/custom-views/regulation-rules');
-      setRules(r.data.rules || []);
+      if (!Array.isArray(r.data?.rules)) throw new Error('The regulation rules response did not contain a list.');
+      setRules(r.data.rules);
       setError('');
     } catch (e) {
-      setError(e.response?.data?.error || 'Failed to load');
+      setError(e.response?.data?.error || e.message || 'Failed to load');
     } finally {
       setLoading(false);
     }

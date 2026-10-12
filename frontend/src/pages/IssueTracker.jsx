@@ -36,10 +36,16 @@ export default function IssueTracker() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ issue_type: '', description: '', reported_date: new Date().toISOString().split('T')[0] });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     api.get(`/tenancies/${id}/issues`)
-      .then(r => setIssues(r.data.data))
+      .then(r => {
+        if (!Array.isArray(r.data?.data)) throw new Error('The issues response did not contain a list.');
+        setIssues(r.data.data);
+        setError('');
+      })
+      .catch(e => setError(e.message || 'Unable to load issues.'))
       .finally(() => setLoading(false));
   }, [id]);
 
@@ -84,7 +90,8 @@ export default function IssueTracker() {
         </form>
       )}
 
-      {loading ? <p>Loading...</p> : issues.length === 0 ? (
+      {error && <p role="alert">{error}</p>}
+      {loading ? <p>Loading...</p> : error ? null : issues.length === 0 ? (
         <div style={s.empty}>
           <p style={{ fontSize: 36, marginBottom: 12 }}>⚠️</p>
           <p>No issues logged yet. Document problems as they occur.</p>

@@ -1,4 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import NativeAIControls from "../components/NativeAIControls.jsx";
+import FormattedAIReport from '../components/FormattedAIReport';
+import { useNativeTenantAI, NativeTenantAIStatus } from '../components/NativeTenantAI';
+import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Layout from '../components/Layout.jsx';
 import api from '../api.js';
@@ -28,24 +31,22 @@ const s = {
 
 export default function LeaseAnalyzer() {
   const { id } = useParams();
-  const [tenancy, setTenancy] = useState(null);
+  const source = useNativeTenantAI(id);
+  const { tenancy } = source;
   const [leaseText, setLeaseText] = useState('');
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    api.get(`/tenancies/${id}`).then(r => setTenancy(r.data));
-  }, [id]);
-
   async function analyze() {
+    if (!source.canRun) { setError('Load an owned tenancy and available provider before analyzing.'); return; }
     if (leaseText.trim().length < 50) { setError('Please paste at least 50 characters of lease text'); return; }
     setLoading(true);
     setError('');
     try {
       const res = await api.post('/ai/lease-analyzer', {
         lease_text: leaseText,
-        state: tenancy?.state || 'California',
+        state: tenancy.state,
         tenancy_id: id,
       });
       setResult(res.data);
@@ -57,18 +58,19 @@ export default function LeaseAnalyzer() {
   }
 
   return (
-    <Layout>
+    <NativeAIControls busy={loading} context="TenantRightsAdvisor"><Layout>
       <Link to={`/tenancies/${id}`} style={s.back}>← Back to Tenancy</Link>
       <div style={s.card}>
         <h1 style={s.h1}>📜 Lease Analyzer</h1>
         <p style={s.sub}>Paste your lease agreement text to identify illegal or problematic clauses under {tenancy?.state || 'your state'} law.</p>
+        <NativeTenantAIStatus {...source} />
 
         {!result && (
           <>
             {error && <div style={s.err}>{error}</div>}
             <label style={s.label}>Paste Lease Text</label>
-            <textarea style={s.textarea} value={leaseText} onChange={e => setLeaseText(e.target.value)} placeholder="Paste your full lease agreement here..." />
-            <button style={s.btn} onClick={analyze} disabled={loading}>
+            <textarea data-ai-field={"leaseText"} style={s.textarea} value={leaseText} onChange={e => setLeaseText(e.target.value)} placeholder="Paste your full lease agreement here..." />
+            <button style={s.btn} onClick={analyze} disabled={loading || !source.canRun || leaseText.trim().length < 50}>
               {loading ? 'Analyzing...' : 'Analyze Lease'}
             </button>
           </>
@@ -128,7 +130,8 @@ export default function LeaseAnalyzer() {
             </button>
           </div>
         )}
+        {result && <FormattedAIReport response={result} title="Complete lease analysis" />}
       </div>
-    </Layout>
+    </Layout></NativeAIControls>
   );
 }

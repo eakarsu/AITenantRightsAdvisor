@@ -28,11 +28,18 @@ export default function Dashboard() {
   const [tenancies, setTenancies] = useState([]);
   const [pagination, setPagination] = useState({});
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [page, setPage] = useState(1);
 
   useEffect(() => {
     api.get(`/tenancies?page=${page}&limit=20`)
-      .then(r => { setTenancies(r.data.data); setPagination(r.data.pagination); })
+      .then(r => {
+        if (!Array.isArray(r.data?.data)) throw new Error('The tenancies response did not contain a list.');
+        setTenancies(r.data.data);
+        setPagination(r.data.pagination || {});
+        setError('');
+      })
+      .catch(e => setError(e.message || 'Unable to load tenancies.'))
       .finally(() => setLoading(false));
   }, [page]);
 
@@ -43,7 +50,8 @@ export default function Dashboard() {
         <Link to="/tenancies/new" style={s.newBtn}>+ Add Tenancy</Link>
       </div>
 
-      {loading ? <p>Loading...</p> : tenancies.length === 0 ? (
+      {error && <p role="alert">{error}</p>}
+      {loading ? <p>Loading...</p> : error ? null : tenancies.length === 0 ? (
         <div style={s.empty}>
           <p style={{ fontSize: 48, marginBottom: 16 }}>🏠</p>
           <p style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>No tenancies yet</p>

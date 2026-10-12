@@ -1,3 +1,5 @@
+import NativeAIControls from "../components/NativeAIControls.jsx";
+import FormattedAIReport from "../components/FormattedAIReport";
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Layout from '../components/Layout.jsx';
@@ -44,25 +46,27 @@ export default function LegalResourceDirectory() {
         <h1 style={s.h1}>Local Legal Resource Directory</h1>
         <p style={s.sub}>Curated legal-aid contacts and tenant-rights resources by state and category. Federal options always included.</p>
         <form onSubmit={lookup}>
+<NativeAIControls busy={loading} context="TenantRightsAdvisor">
           <div style={s.formRow}>
             <div>
               <label style={s.label}>State (2-letter)</label>
-              <input style={s.input} value={state} onChange={(e) => setState(e.target.value)} placeholder="CA, NY, TX..." />
+              <input data-ai-field={"state"} style={s.input} value={state} onChange={(e) => setState(e.target.value)} placeholder="CA, NY, TX..." />
             </div>
             <div>
               <label style={s.label}>Category</label>
-              <input style={s.input} value={category} onChange={(e) => setCategory(e.target.value)} placeholder="legal_aid, fair_housing, rent_control" />
+              <input data-ai-field={"category"} style={s.input} value={category} onChange={(e) => setCategory(e.target.value)} placeholder="legal_aid, fair_housing, rent_control" />
             </div>
           </div>
           <button type="submit" style={{ ...s.btn, opacity: loading ? 0.6 : 1 }} disabled={loading}>
             {loading ? 'Looking up...' : 'Look Up Resources'}
           </button>
-        </form>
+        </NativeAIControls>
+</form>
         {error && <div style={{ ...s.err, marginTop: 18 }}>{error}</div>}
         {result && (
           <div style={s.resultBox}>
             <h3 style={{ marginBottom: 12 }}>Resources</h3>
-            <pre style={s.pre}>{JSON.stringify(result, null, 2)}</pre>
+            <FormattedAIReport response={result} />
           </div>
         )}
       </div>

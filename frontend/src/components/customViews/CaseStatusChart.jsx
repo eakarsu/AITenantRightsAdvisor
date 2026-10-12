@@ -10,8 +10,11 @@ export default function CaseStatusChart() {
 
   useEffect(() => {
     api.get('/custom-views/case-status-chart')
-      .then(r => setData(r.data))
-      .catch(e => setError(e.response?.data?.error || 'Failed to load'))
+      .then(r => {
+        if (!Array.isArray(r.data?.series)) throw new Error('The case status response did not contain a series.');
+        setData(r.data);
+      })
+      .catch(e => setError(e.response?.data?.error || e.message || 'Failed to load'))
       .finally(() => setLoading(false));
   }, []);
 

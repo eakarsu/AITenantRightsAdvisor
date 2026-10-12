@@ -1,4 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import NativeAIControls from '../components/NativeAIControls';
+import FormattedAIReport from '../components/FormattedAIReport';
+import { useNativeTenantAI, NativeTenantAIStatus } from '../components/NativeTenantAI';
+import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Layout from '../components/Layout.jsx';
 import api from '../api.js';
@@ -28,24 +31,24 @@ const s = {
 
 export default function EvictionDefense() {
   const { id } = useParams();
-  const [tenancy, setTenancy] = useState(null);
+  const source = useNativeTenantAI(id);
+  const { tenancy } = source;
   const [summonsText, setSummonsText] = useState('');
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    api.get(`/tenancies/${id}`).then(r => setTenancy(r.data));
-  }, [id]);
+
 
   async function analyze() {
+    if (!source.canRun || !tenancy?.state) { setError('An owned tenancy with its actual jurisdiction and an available provider is required.'); return; }
     if (summonsText.trim().length < 50) { setError('Please paste at least 50 characters of summons text'); return; }
     setLoading(true);
     setError('');
     try {
       const res = await api.post('/ai/eviction-defense', {
         summons_text: summonsText,
-        state: tenancy?.state || 'California',
+        state: tenancy.state,
         tenancy_id: id,
       });
       setResult(res.data);
@@ -66,11 +69,19 @@ export default function EvictionDefense() {
         {!result && (
           <>
             {error && <div style={s.err}>{error}</div>}
+            <NativeTenantAIStatus {...source} />
+            <NativeAIControls busy={loading} context="Eviction source review" presets={[
+              { name: 'Keep source text', fill: () => ({ filled: summonsText.trim() ? 1 : 0, manual: summonsText.trim() ? [] : ['the actual summons text; no court facts are generated'] }) },
+              { name: 'Trim outer whitespace', fill: () => { setSummonsText(summonsText.trim()); return { filled: summonsText.trim() ? 1 : 0, manual: summonsText.trim() ? [] : ['the actual summons text; no court facts are generated'] }; } },
+              { name: 'Normalize line endings', fill: () => { setSummonsText(summonsText.replace(/\r\n?/g, '\n')); return { filled: summonsText.trim() ? 1 : 0, manual: summonsText.trim() ? [] : ['the actual summons text; no court facts are generated'] }; } },
+            ]}>
+            <p>All editable inputs in this request are actual court-source text. These three fill/review choices preserve its facts. Paste the real summons first; examples cannot create court evidence.</p>
             <label style={s.label}>Paste Eviction Summons Text</label>
-            <textarea style={s.textarea} value={summonsText} onChange={e => setSummonsText(e.target.value)} placeholder="Paste the full text of the eviction summons or notice..." />
-            <button style={s.btn} onClick={analyze} disabled={loading}>
+            <textarea data-ai-field="summons_text" style={s.textarea} value={summonsText} onChange={e => setSummonsText(e.target.value)} placeholder="Paste the full text of the eviction summons or notice..." />
+            <button style={s.btn} onClick={analyze} disabled={loading || !source.canRun || !tenancy?.state || summonsText.trim().length < 50}>
               {loading ? 'Analyzing...' : 'Analyze & Build Defense'}
             </button>
+            </NativeAIControls>
           </>
         )}
 
@@ -116,6 +127,7 @@ export default function EvictionDefense() {
             </button>
           </div>
         )}
+        {result && <FormattedAIReport response={result} title="Complete defense analysis" />}
       </div>
     </Layout>
   );

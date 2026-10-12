@@ -1,3 +1,5 @@
+import NativeAIControls from "../components/NativeAIControls.jsx";
+import FormattedAIReport from "../components/FormattedAIReport";
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Layout from '../components/Layout.jsx';
@@ -43,27 +45,26 @@ export default function LegalExpertChat() {
   };
 
   return (
-    <Layout>
+    <NativeAIControls busy={loading} context="TenantRightsAdvisor"><Layout>
       <Link to="/" style={s.back}>&larr; Back to Dashboard</Link>
       <div style={s.card}>
         <h1 style={s.h1}>Live Legal Expert Chat</h1>
         <p style={s.sub}>
-          Connect with a vetted live legal expert. Requires <code>LEGAL_EXPERT_CHAT_API_KEY</code>; returns 503 with the
-          missing env var name when not configured.
+          Request a live legal expert when the provider is configured. The result will explain when that service is unavailable.
         </p>
         <form onSubmit={submit}>
           <div style={{ marginBottom: 14 }}>
             <label style={s.label}>Topic *</label>
-            <textarea style={s.textarea} required value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="e.g., 30-day eviction notice received without cause" />
+            <textarea data-ai-field={"topic"} style={s.textarea} required value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="e.g., 30-day eviction notice received without cause" />
           </div>
           <div style={s.formRow}>
             <div>
               <label style={s.label}>State (2-letter)</label>
-              <input style={s.input} value={stateField} onChange={(e) => setStateField(e.target.value)} placeholder="CA" />
+              <input data-ai-field={"stateField"} style={s.input} value={stateField} onChange={(e) => setStateField(e.target.value)} placeholder="CA" />
             </div>
             <div>
               <label style={s.label}>Urgency</label>
-              <select style={s.input} value={urgency} onChange={(e) => setUrgency(e.target.value)}>
+              <select data-ai-field={"urgency"} style={s.input} value={urgency} onChange={(e) => setUrgency(e.target.value)}>
                 <option value="normal">normal</option>
                 <option value="high">high</option>
                 <option value="emergency">emergency</option>
@@ -78,10 +79,10 @@ export default function LegalExpertChat() {
         {result && (
           <div style={s.resultBox}>
             <h3 style={{ marginBottom: 12 }}>Response</h3>
-            <pre style={s.pre}>{JSON.stringify(result, null, 2)}</pre>
+            <FormattedAIReport response={result} />
           </div>
         )}
       </div>
-    </Layout>
+    </Layout></NativeAIControls>
   );
 }

@@ -1,3 +1,5 @@
+import NativeAIControls from "../components/NativeAIControls.jsx";
+import FormattedAIReport from "../components/FormattedAIReport";
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Layout from '../components/Layout.jsx';
@@ -55,46 +57,48 @@ export default function NegotiationSimulator() {
         <p style={s.sub}>Role-play a landlord-tenant negotiation to prepare your strategy and anticipate counter-arguments.</p>
 
         <form onSubmit={handleSubmit}>
+<NativeAIControls busy={loading} context="TenantRightsAdvisor">
           <div style={s.formRow}>
             <div>
               <label style={s.label}>Topic *</label>
-              <input style={s.input} type="text" required value={form.topic} onChange={(e) => handleChange('topic', e.target.value)} placeholder="rent reduction, repair demand, lease renewal" />
+              <input data-ai-field={"topic"} style={s.input} type="text" required value={form.topic} onChange={(e) => handleChange('topic', e.target.value)} placeholder="rent reduction, repair demand, lease renewal" />
             </div>
             <div>
               <label style={s.label}>Jurisdiction</label>
-              <input style={s.input} type="text" value={form.jurisdiction} onChange={(e) => handleChange('jurisdiction', e.target.value)} placeholder="e.g. Oakland, CA" />
+              <input data-ai-field={"jurisdiction"} style={s.input} type="text" value={form.jurisdiction} onChange={(e) => handleChange('jurisdiction', e.target.value)} placeholder="e.g. Oakland, CA" />
             </div>
           </div>
 
           <div style={{ marginBottom: 14 }}>
             <label style={s.label}>Tenant Position *</label>
-            <textarea style={s.textarea} rows={3} required value={form.tenant_position} onChange={(e) => handleChange('tenant_position', e.target.value)}
+            <textarea data-ai-field={"tenant_position"} style={s.textarea} rows={3} required value={form.tenant_position} onChange={(e) => handleChange('tenant_position', e.target.value)}
               placeholder="What you want, why you believe you're entitled, and any leverage you have." />
           </div>
 
           <div style={{ marginBottom: 14 }}>
             <label style={s.label}>Landlord Stance (optional)</label>
-            <textarea style={s.textarea} rows={3} value={form.landlord_stance} onChange={(e) => handleChange('landlord_stance', e.target.value)}
+            <textarea data-ai-field={"landlord_stance"} style={s.textarea} rows={3} value={form.landlord_stance} onChange={(e) => handleChange('landlord_stance', e.target.value)}
               placeholder="What you expect them to argue or refuse." />
           </div>
 
           <div style={{ marginBottom: 14 }}>
             <label style={s.label}>Prior Exchanges (optional)</label>
-            <textarea style={s.textarea} rows={3} value={form.history} onChange={(e) => handleChange('history', e.target.value)}
+            <textarea data-ai-field={"history"} style={s.textarea} rows={3} value={form.history} onChange={(e) => handleChange('history', e.target.value)}
               placeholder="Earlier emails, letters, or conversations summarized." />
           </div>
 
           <button type="submit" style={{ ...s.btn, opacity: loading ? 0.6 : 1 }} disabled={loading}>
             {loading ? 'Simulating...' : 'Run Simulation'}
           </button>
-        </form>
+        </NativeAIControls>
+</form>
 
         {error && <div style={{ ...s.err, marginTop: 18 }}>{error}</div>}
 
         {result && (
           <div style={s.resultBox}>
             <h3 style={{ marginBottom: 12 }}>Simulation Result</h3>
-            <pre style={s.pre}>{JSON.stringify(result, null, 2)}</pre>
+            <FormattedAIReport response={result} />
           </div>
         )}
       </div>

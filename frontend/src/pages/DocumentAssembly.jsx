@@ -1,3 +1,5 @@
+import NativeAIControls from "../components/NativeAIControls.jsx";
+import FormattedAIReport from "../components/FormattedAIReport";
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Layout from '../components/Layout.jsx';
@@ -66,44 +68,46 @@ export default function DocumentAssembly() {
         <p style={s.sub}>Auto-fill a tenant document or form (e.g., demand letter, security-deposit dispute, repair request).</p>
 
         <form onSubmit={handleSubmit}>
+<NativeAIControls busy={loading} context="TenantRightsAdvisor">
           <div style={s.formRow}>
             <div>
               <label style={s.label}>Document Type *</label>
-              <input style={s.input} type="text" required value={form.document_type} onChange={(e) => handleChange('document_type', e.target.value)}
+              <input data-ai-field={"document_type"} style={s.input} type="text" required value={form.document_type} onChange={(e) => handleChange('document_type', e.target.value)}
                 placeholder="demand_letter_for_repairs, security_deposit_demand, ..." />
             </div>
             <div>
               <label style={s.label}>Jurisdiction</label>
-              <input style={s.input} type="text" value={form.jurisdiction} onChange={(e) => handleChange('jurisdiction', e.target.value)} placeholder="e.g. Oakland, CA" />
+              <input data-ai-field={"jurisdiction"} style={s.input} type="text" value={form.jurisdiction} onChange={(e) => handleChange('jurisdiction', e.target.value)} placeholder="e.g. Oakland, CA" />
             </div>
             <div>
               <label style={s.label}>Tenancy ID (optional)</label>
-              <input style={s.input} type="text" value={form.tenancy_id} onChange={(e) => handleChange('tenancy_id', e.target.value)} placeholder="attaches result to tenancy" />
+              <input data-ai-field={"tenancy_id"} style={s.input} type="text" value={form.tenancy_id} onChange={(e) => handleChange('tenancy_id', e.target.value)} placeholder="attaches result to tenancy" />
             </div>
           </div>
 
           <div style={{ marginBottom: 14 }}>
             <label style={s.label}>Tenant Info (JSON or text)</label>
-            <textarea style={s.textarea} rows={3} value={form.tenant_info} onChange={(e) => handleChange('tenant_info', e.target.value)}
+            <textarea data-ai-field={"tenant_info"} style={s.textarea} rows={3} value={form.tenant_info} onChange={(e) => handleChange('tenant_info', e.target.value)}
               placeholder='{"name":"Jane Doe","address":"123 Main St #4"}' />
           </div>
 
           <div style={{ marginBottom: 14 }}>
             <label style={s.label}>Landlord Info (JSON or text)</label>
-            <textarea style={s.textarea} rows={3} value={form.landlord_info} onChange={(e) => handleChange('landlord_info', e.target.value)}
+            <textarea data-ai-field={"landlord_info"} style={s.textarea} rows={3} value={form.landlord_info} onChange={(e) => handleChange('landlord_info', e.target.value)}
               placeholder='{"name":"Acme LLC","mailing_address":"PO Box 7"}' />
           </div>
 
           <div style={{ marginBottom: 14 }}>
             <label style={s.label}>Facts</label>
-            <textarea style={s.textarea} rows={5} value={form.facts} onChange={(e) => handleChange('facts', e.target.value)}
+            <textarea data-ai-field={"facts"} style={s.textarea} rows={5} value={form.facts} onChange={(e) => handleChange('facts', e.target.value)}
               placeholder="Describe what happened (timeline, written notices given, repair issues...)" />
           </div>
 
           <button type="submit" style={{ ...s.btn, opacity: loading ? 0.6 : 1 }} disabled={loading}>
             {loading ? 'Assembling...' : 'Assemble Document'}
           </button>
-        </form>
+        </NativeAIControls>
+</form>
 
         {error && <div style={{ ...s.err, marginTop: 18 }}>{error}</div>}
 
@@ -113,10 +117,7 @@ export default function DocumentAssembly() {
             {result.filled_document && (
               <pre style={{ ...s.pre, background: 'white', padding: 12, borderRadius: 6, marginBottom: 12 }}>{result.filled_document}</pre>
             )}
-            <details>
-              <summary style={{ cursor: 'pointer', color: '#4a5568', fontSize: 13 }}>Show full JSON</summary>
-              <pre style={s.pre}>{JSON.stringify(result, null, 2)}</pre>
-            </details>
+            <FormattedAIReport response={result} title="Complete assembled document" />
           </div>
         )}
       </div>

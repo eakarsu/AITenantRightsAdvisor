@@ -1,3 +1,5 @@
+import NativeAIControls from "../components/NativeAIControls.jsx";
+import FormattedAIReport from "../components/FormattedAIReport";
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Layout from '../components/Layout.jsx';
@@ -60,18 +62,19 @@ export default function CaseOutcome() {
         <p style={s.sub}>AI predicts the likely outcome of an eviction defense or tenant-landlord dispute.</p>
 
         <form onSubmit={handleSubmit}>
+<NativeAIControls busy={loading} context="TenantRightsAdvisor">
           <div style={s.formRow}>
             <div>
               <label style={s.label}>State *</label>
-              <input style={s.input} type="text" required value={form.state} onChange={(e) => handleChange('state', e.target.value)} placeholder="e.g. CA" />
+              <input data-ai-field={"state"} style={s.input} type="text" required value={form.state} onChange={(e) => handleChange('state', e.target.value)} placeholder="e.g. CA" />
             </div>
             <div>
               <label style={s.label}>Jurisdiction (city/county)</label>
-              <input style={s.input} type="text" value={form.jurisdiction} onChange={(e) => handleChange('jurisdiction', e.target.value)} placeholder="e.g. Oakland" />
+              <input data-ai-field={"jurisdiction"} style={s.input} type="text" value={form.jurisdiction} onChange={(e) => handleChange('jurisdiction', e.target.value)} placeholder="e.g. Oakland" />
             </div>
             <div>
               <label style={s.label}>Evidence Strength</label>
-              <select style={s.input} value={form.evidence_strength} onChange={(e) => handleChange('evidence_strength', e.target.value)}>
+              <select data-ai-field={"evidence_strength"} style={s.input} value={form.evidence_strength} onChange={(e) => handleChange('evidence_strength', e.target.value)}>
                 <option value="weak">Weak</option>
                 <option value="medium">Medium</option>
                 <option value="strong">Strong</option>
@@ -81,7 +84,7 @@ export default function CaseOutcome() {
 
           <div style={{ marginBottom: 14 }}>
             <label style={s.label}>Case Summary * (min 30 chars)</label>
-            <textarea style={s.textarea} rows={6} required minLength={30}
+            <textarea data-ai-field={"case_summary"} style={s.textarea} rows={6} required minLength={30}
               value={form.case_summary} onChange={(e) => handleChange('case_summary', e.target.value)}
               placeholder="Describe the dispute, timeline, key facts, evidence available..." />
           </div>
@@ -89,7 +92,8 @@ export default function CaseOutcome() {
           <button type="submit" style={{ ...s.btn, opacity: loading ? 0.6 : 1 }} disabled={loading}>
             {loading ? 'Predicting...' : 'Predict Outcome'}
           </button>
-        </form>
+        </NativeAIControls>
+</form>
 
         {error && <div style={{ ...s.err, marginTop: 18 }}>{error}</div>}
 
@@ -108,7 +112,7 @@ export default function CaseOutcome() {
                 <strong>Tenant Win Probability:</strong> {result.tenant_win_probability_pct}%
               </p>
             )}
-            <pre style={s.pre}>{JSON.stringify(result, null, 2)}</pre>
+            <FormattedAIReport response={result} />
           </div>
         )}
       </div>

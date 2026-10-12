@@ -1,4 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import NativeAIControls from '../components/NativeAIControls';
+import FormattedAIReport from '../components/FormattedAIReport';
+import { useNativeTenantAI, NativeTenantAIStatus, noticeExamples } from '../components/NativeTenantAI';
+import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Layout from '../components/Layout.jsx';
 import api from '../api.js';
@@ -30,18 +33,18 @@ const s = {
 
 export default function NoticeGenerator() {
   const { id } = useParams();
-  const [tenancy, setTenancy] = useState(null);
+  const source = useNativeTenantAI(id);
+  const { tenancy } = source;
   const [noticeType, setNoticeType] = useState('');
   const [context, setContext] = useState('');
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    api.get(`/tenancies/${id}`).then(r => setTenancy(r.data));
-  }, [id]);
+
 
   async function generate() {
+    if (!source.canRun) { setError('Load an owned tenancy and available provider before generating.'); return; }
     if (!noticeType) { setError('Please select a notice type'); return; }
     setLoading(true);
     setError('');
@@ -64,21 +67,25 @@ export default function NoticeGenerator() {
       <Link to={`/tenancies/${id}`} style={s.back}>← Back to Tenancy</Link>
       <div style={s.card}>
         <h1 style={s.h1}>📋 Notice Generator</h1>
-        <p style={s.sub}>Generate a legally-correct formal notice letter for your landlord.</p>
+        <p style={s.sub}>Prepare a notice draft for review using the selected tenancy. Verify source facts and local requirements before use.</p>
         {error && <div style={s.err}>{error}</div>}
 
+        <NativeTenantAIStatus {...source} />
+        <NativeAIControls busy={loading} context="Notice draft" presets={noticeExamples.map((example) => ({ name: example.name, fill: () => { setNoticeType(example.noticeType); setContext(example.context); return { filled: 2, manual: [] }; } }))}>
+        <p>Each Demo AI button fills notice type and optional context. Draft examples do not assert that an event occurred or authorize sending a notice.</p>
         <label style={s.label}>Notice Type *</label>
-        <select style={s.select} value={noticeType} onChange={e => setNoticeType(e.target.value)}>
+        <select data-ai-field="notice_type" style={s.select} value={noticeType} onChange={e => setNoticeType(e.target.value)}>
           <option value="">Select notice type...</option>
           {NOTICE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
         </select>
 
         <label style={s.label}>Additional Context (optional)</label>
-        <textarea style={s.textarea} value={context} onChange={e => setContext(e.target.value)} placeholder="E.g. leak reported on Jan 5, not fixed after 30 days..." />
+        <textarea data-ai-field="additional_context" style={s.textarea} value={context} onChange={e => setContext(e.target.value)} placeholder="E.g. leak reported on Jan 5, not fixed after 30 days..." />
 
-        <button style={s.btn} onClick={generate} disabled={loading}>
+        <button style={s.btn} onClick={generate} disabled={loading || !source.canRun || !noticeType}>
           {loading ? 'Generating...' : result ? 'Regenerate' : 'Generate Notice'}
         </button>
+        </NativeAIControls>
 
         {result && (
           <div style={s.result}>
@@ -96,6 +103,7 @@ export default function NoticeGenerator() {
             </div>
           </div>
         )}
+        {result && <FormattedAIReport response={result} title="Complete notice result" />}
       </div>
     </Layout>
   );

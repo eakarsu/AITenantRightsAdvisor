@@ -21,6 +21,9 @@ export default function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const demoAvailable = import.meta.env.VITE_ENABLE_DEMO_CREDENTIAL_AUTOFILL === 'true'
+    && Boolean(import.meta.env.VITE_DEMO_EMAIL && import.meta.env.VITE_DEMO_PASSWORD);
+
   async function handleSubmit(e) {
     e.preventDefault();
     setLoading(true);
@@ -50,13 +53,18 @@ export default function Login() {
           <input style={s.input} type="password" value={form.password} onChange={e => setForm({...form, password: e.target.value})} required />
           <button
             type="button"
-            onClick={() => { setForm((current) => ({ ...current, email: import.meta.env.VITE_DEMO_EMAIL || '', password: import.meta.env.VITE_DEMO_PASSWORD || '' })); }}
-            disabled={!import.meta.env.VITE_DEMO_EMAIL || !import.meta.env.VITE_DEMO_PASSWORD}
-            aria-label="Auto Fill Demo Credentials"
+            onClick={() => {
+              if (!demoAvailable) return;
+              setForm({ email: import.meta.env.VITE_DEMO_EMAIL, password: import.meta.env.VITE_DEMO_PASSWORD });
+              setError('');
+            }}
+            disabled={!demoAvailable}
+            aria-label="Fill demo credentials"
             style={{ width: '100%', marginBottom: '12px', padding: '10px 14px', borderRadius: '8px', border: '1px solid currentColor', background: 'transparent', cursor: 'pointer' }}
           >
-            Auto Fill Demo Credentials
+            Fill demo credentials
           </button>
+          {!demoAvailable && <p role="status" style={{ ...s.sub, marginBottom: 12 }}>Demo credentials are not configured for this session.</p>}
           <button style={s.btn} type="submit" disabled={loading}>{loading ? 'Signing in...' : 'Sign In'}</button>
         </form>
         <div style={s.link}>Don't have an account? <Link to="/register" style={s.a}>Register</Link></div>

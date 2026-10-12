@@ -555,7 +555,11 @@ router.get('/legal-resource-directory', async (req, res) => {
 router.post('/legal-expert-chat', async (req, res) => {
   const apiKey = process.env.LEGAL_EXPERT_CHAT_API_KEY;
   if (!apiKey) {
-    return res.status(503).json({ error: 'Legal expert chat unavailable', missing: 'LEGAL_EXPERT_CHAT_API_KEY' });
+    return res.json({
+      status: 'unavailable',
+      message: 'Live legal expert chat is not configured. No expert was contacted.',
+      prerequisite: 'Configure the legal expert chat provider before requesting a live session.',
+    });
   }
   const { topic, state, urgency } = req.body || {};
   if (!topic) return res.status(400).json({ error: 'topic is required' });

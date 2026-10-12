@@ -1,3 +1,5 @@
+import NativeAIControls from "../components/NativeAIControls.jsx";
+import FormattedAIReport from "../components/FormattedAIReport";
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Layout from '../components/Layout.jsx';
@@ -66,18 +68,19 @@ export default function LocalLawLookup() {
         <p style={s.sub}>Get jurisdiction-specific tenant-rights guidance, statutes, and notice periods.</p>
 
         <form onSubmit={handleSubmit}>
+<NativeAIControls busy={loading} context="TenantRightsAdvisor">
           <div style={s.formRow}>
             <div>
               <label style={s.label}>State *</label>
-              <input style={s.input} type="text" required value={form.state} onChange={(e) => handleChange('state', e.target.value)} placeholder="e.g. NY" />
+              <input data-ai-field={"state"} style={s.input} type="text" required value={form.state} onChange={(e) => handleChange('state', e.target.value)} placeholder="e.g. NY" />
             </div>
             <div>
               <label style={s.label}>City</label>
-              <input style={s.input} type="text" value={form.city} onChange={(e) => handleChange('city', e.target.value)} placeholder="e.g. Brooklyn" />
+              <input data-ai-field={"city"} style={s.input} type="text" value={form.city} onChange={(e) => handleChange('city', e.target.value)} placeholder="e.g. Brooklyn" />
             </div>
             <div>
               <label style={s.label}>Topic *</label>
-              <select style={s.input} required value={form.topic} onChange={(e) => handleChange('topic', e.target.value)}>
+              <select data-ai-field={"topic"} style={s.input} required value={form.topic} onChange={(e) => handleChange('topic', e.target.value)}>
                 {TOPICS.map((t) => <option key={t} value={t}>{t}</option>)}
               </select>
             </div>
@@ -85,21 +88,22 @@ export default function LocalLawLookup() {
 
           <div style={{ marginBottom: 14 }}>
             <label style={s.label}>Situation</label>
-            <textarea style={s.textarea} rows={4} value={form.situation} onChange={(e) => handleChange('situation', e.target.value)}
+            <textarea data-ai-field={"situation"} style={s.textarea} rows={4} value={form.situation} onChange={(e) => handleChange('situation', e.target.value)}
               placeholder="Describe the specific situation for context (optional)..." />
           </div>
 
           <button type="submit" style={{ ...s.btn, opacity: loading ? 0.6 : 1 }} disabled={loading}>
             {loading ? 'Looking up...' : 'Lookup Local Law'}
           </button>
-        </form>
+        </NativeAIControls>
+</form>
 
         {error && <div style={{ ...s.err, marginTop: 18 }}>{error}</div>}
 
         {result && (
           <div style={s.resultBox}>
             <h3 style={{ marginBottom: 12 }}>Guidance</h3>
-            <pre style={s.pre}>{JSON.stringify(result, null, 2)}</pre>
+            <FormattedAIReport response={result} />
           </div>
         )}
       </div>
